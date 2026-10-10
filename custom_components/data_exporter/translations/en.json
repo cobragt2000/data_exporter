@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Entity Data Exporter",
+        "description": "Set up Entity Data Exporter. This registers the export_data action and auto-loads the dashboard card. There is nothing to configure here — all options are set per call."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Already configured. Only a single instance of Entity Data Exporter is allowed."
+    }
+  }
+}

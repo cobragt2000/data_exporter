@@ -1,0 +1,131 @@
+export_data:
+  name: Export curated entity data
+  description: >-
+    Build a curated list of Home Assistant entities (filtered by area and
+    domain, with diagnostic/config/hidden/disabled entities removed) and
+    optionally write it to a JSON file in the config directory. Use
+    "return_response" to get the data back inline.
+  fields:
+    areas:
+      name: Areas
+      description: Areas to include. Leave empty for all areas.
+      required: false
+      selector:
+        area:
+          multiple: true
+    domains:
+      name: Domains
+      description: >-
+        Entity domains to include (e.g. light, switch, climate). Leave empty
+        for all domains.
+      required: false
+      example: '["light", "switch", "climate"]'
+      selector:
+        select:
+          multiple: true
+          custom_value: true
+          options:
+            - light
+            - switch
+            - climate
+            - cover
+            - fan
+            - lock
+            - media_player
+            - vacuum
+            - sensor
+            - binary_sensor
+            - humidifier
+            - water_heater
+            - number
+            - select
+    include_diagnostic:
+      name: Include diagnostic & config entities
+      description: Include entities HA tags as diagnostic or config.
+      required: false
+      default: false
+      selector:
+        boolean:
+    include_hidden:
+      name: Include hidden entities
+      description: Include entities hidden in the UI.
+      required: false
+      default: false
+      selector:
+        boolean:
+    include_disabled:
+      name: Include disabled entities
+      description: Include entities disabled in the registry.
+      required: false
+      default: false
+      selector:
+        boolean:
+    include_automations:
+      name: Include automations
+      description: >-
+        Include full automation configs (triggers/conditions/actions) plus the
+        entities, devices, and areas each automation references. When areas are
+        selected, only automations referencing those areas are included.
+      required: false
+      default: true
+      selector:
+        boolean:
+    include_scripts:
+      name: Include scripts
+      description: >-
+        Include full script configs plus what each references. Area-filtered
+        the same way as automations when areas are selected.
+      required: false
+      default: true
+      selector:
+        boolean:
+    include_scenes:
+      name: Include scenes
+      description: >-
+        Include scene configs (target entity states) plus what each references.
+        Area-filtered the same way as automations when areas are selected.
+      required: false
+      default: true
+      selector:
+        boolean:
+    exclude_attributes:
+      name: Exclude attributes
+      description: >-
+        Extra attribute names to strip from each entity, on top of the
+        built-in noise list (rssi, battery, voltage, etc.).
+      required: false
+      example: '["custom_noise_attr"]'
+      selector:
+        text:
+          multiple: true
+    include_attributes:
+      name: Only these attributes
+      description: >-
+        Allowlist mode. If set, ONLY these attributes are kept per entity and
+        everything else is dropped.
+      required: false
+      example: '["temperature", "brightness"]'
+      selector:
+        text:
+          multiple: true
+    exclude_entities:
+      name: Exclude entities
+      description: Specific entity_ids to drop regardless of other filters.
+      required: false
+      selector:
+        entity:
+          multiple: true
+    write_file:
+      name: Write JSON file
+      description: Write a timestamped JSON file to the config directory.
+      required: false
+      default: true
+      selector:
+        boolean:
+    scope:
+      name: Scope label
+      description: A label stored in the file metadata and used in the filename.
+      required: false
+      example: whole_home
+      selector:
+        text:
