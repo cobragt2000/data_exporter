@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.4.1] - 2026-10-12
+
+### Fixed
+- **Hassfest validation**: reordered `manifest.json` keys to the order hassfest
+  requires (`domain`, `name`, then alphabetical). The previous order failed the
+  Hassfest check as a hard error.
+- **HACS validation**: added brand assets under
+  `custom_components/data_exporter/brand/` (`icon.svg`, `icon.png` 256×256,
+  `icon@2x.png` 512×512) so the HACS `brands` check passes without the domain
+  being registered in the home-assistant/brands repo.
+
+### Added
+- Integration icon.
+- README badge row (Validate, HACS Custom, HA analytics usage, integration
+  version read live from `manifest.json`, latest release, downloads, license).
+
 ## [2.4.0] - 2026-10-08
 
 ### Fixed

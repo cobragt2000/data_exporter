@@ -1,12 +1,12 @@
 {
   "domain": "data_exporter",
   "name": "Entity Data Exporter",
-  "version": "2.4.0",
-  "config_flow": true,
-  "documentation": "https://github.com/cobragt2000/data_exporter",
-  "issue_tracker": "https://github.com/cobragt2000/data_exporter/issues",
   "codeowners": ["@cobragt2000"],
+  "config_flow": true,
   "dependencies": ["http", "frontend"],
+  "documentation": "https://github.com/cobragt2000/data_exporter",
+  "integration_type": "service",
   "iot_class": "calculated",
-  "integration_type": "service"
+  "issue_tracker": "https://github.com/cobragt2000/data_exporter/issues",
+  "version": "2.4.1"
 }

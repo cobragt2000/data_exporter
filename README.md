@@ -1,7 +1,13 @@
 # Entity Data Exporter
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-![Validate](https://github.com/cobragt2000/data_exporter/actions/workflows/validate.yml/badge.svg)
+[![Validate](https://github.com/cobragt2000/data_exporter/actions/workflows/validate.yml/badge.svg)](https://github.com/cobragt2000/data_exporter/actions/workflows/validate.yml)
+[![hacs](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![Integration usage](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=integration%20usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.data_exporter.total)](https://analytics.home-assistant.io/)
+
+[![Integration version](https://img.shields.io/badge/dynamic/json?color=2ea44f&label=integration&query=%24.version&url=https%3A%2F%2Fraw.githubusercontent.com%2Fcobragt2000%2Fdata_exporter%2Fmain%2Fcustom_components%2Fdata_exporter%2Fmanifest.json)](https://github.com/cobragt2000/data_exporter/releases)
+[![Latest release](https://img.shields.io/github/v/release/cobragt2000/data_exporter?color=1f6feb&label=latest%20release&sort=semver)](https://github.com/cobragt2000/data_exporter/releases)
+[![Downloads](https://img.shields.io/github/downloads/cobragt2000/data_exporter/total?color=orange&label=downloads)](https://github.com/cobragt2000/data_exporter/releases)
+[![License](https://img.shields.io/github/license/cobragt2000/data_exporter?color=blue)](LICENSE)
 
 A Home Assistant custom integration that produces a **curated** list of your
 entities — filtered by area and domain, with all the junk (diagnostic/config
