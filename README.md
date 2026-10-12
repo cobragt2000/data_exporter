@@ -5,7 +5,6 @@
 [![Integration usage](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=integration%20usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.data_exporter.total)](https://analytics.home-assistant.io/)
 
 [![Integration version](https://img.shields.io/badge/dynamic/json?color=2ea44f&label=integration&query=%24.version&url=https%3A%2F%2Fraw.githubusercontent.com%2Fcobragt2000%2Fdata_exporter%2Fmain%2Fcustom_components%2Fdata_exporter%2Fmanifest.json)](https://github.com/cobragt2000/data_exporter/releases)
-[![Latest release](https://img.shields.io/github/v/release/cobragt2000/data_exporter?color=1f6feb&label=latest%20release&sort=semver)](https://github.com/cobragt2000/data_exporter/releases)
 [![Downloads](https://img.shields.io/github/downloads/cobragt2000/data_exporter/total?color=orange&label=downloads)](https://github.com/cobragt2000/data_exporter/releases)
 [![License](https://img.shields.io/github/license/cobragt2000/data_exporter?color=blue)](LICENSE)
 
@@ -16,6 +15,10 @@ so you can hand a clean, actionable inventory to an LLM for automation design.
 
 It ships with a **custom Lovelace card** for point-and-click exports and a
 **service/action** you can call from Developer Tools, scripts, or automations.
+
+<p align="center">
+  <img src="docs/card.png" alt="Entity Data Exporter dashboard card — pick areas and domains, toggle what to include, and run the export" width="420">
+</p>
 
 ## How the filtering works
 

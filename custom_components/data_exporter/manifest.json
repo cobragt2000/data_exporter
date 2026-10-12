@@ -8,5 +8,5 @@
   "integration_type": "service",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/cobragt2000/data_exporter/issues",
-  "version": "2.4.1"
+  "version": "2.4.2"
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.2] - 2026-10-12
+
+### Changed
+- README: added the dashboard-card screenshot near the top (`docs/card.png`).
+- README: removed the "latest release" badge.
+
 ## [2.4.1] - 2026-10-12
 
 ### Fixed
