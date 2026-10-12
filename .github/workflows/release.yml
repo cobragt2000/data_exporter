@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  # Manual fallback: build + attach to an existing tag from the Actions tab.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build (e.g. v2.4.1)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release-zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Resolve tag and version
+        id: v
+        run: |
+          TAG="${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify manifest version matches tag
+        run: |
+          MVER=$(python3 -c "import json;print(json.load(open('custom_components/data_exporter/manifest.json'))['version'])")
+          if [ "$MVER" != "${{ steps.v.outputs.version }}" ]; then
+            echo "::error::Tag ${{ steps.v.outputs.tag }} (version ${{ steps.v.outputs.version }}) does not match manifest.json version $MVER"
+            exit 1
+          fi
+          echo "manifest.json version $MVER matches tag ${{ steps.v.outputs.tag }}"
+
+      # HACS layout: integration files at the ZIP ROOT (no nested folder).
+      # Asset name is constant (data_exporter.zip); the version lives in the tag.
+      - name: Build data_exporter.zip
+        run: |
+          cd custom_components/data_exporter
+          zip -r "$GITHUB_WORKSPACE/data_exporter.zip" . -x '*.DS_Store'
+
+      - name: Create / update release and attach zip
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.v.outputs.tag }}
+          name: ${{ steps.v.outputs.tag }}
+          files: data_exporter.zip
+          generate_release_notes: true
