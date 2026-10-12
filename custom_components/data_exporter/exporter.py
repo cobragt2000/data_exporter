@@ -14,6 +14,7 @@ not catch.
 """
 from __future__ import annotations
 
+import csv
 import json
 import logging
 from datetime import datetime
@@ -34,6 +35,8 @@ from .const import (
     ATTR_DOMAINS,
     ATTR_EXCLUDE_ATTRIBUTES,
     ATTR_EXCLUDE_ENTITIES,
+    ATTR_FORMAT,
+    ATTR_INCLUDE_ALL_ATTRIBUTES,
     ATTR_INCLUDE_ATTRIBUTES,
     ATTR_INCLUDE_AUTOMATIONS,
     ATTR_INCLUDE_DIAGNOSTIC,
@@ -43,7 +46,10 @@ from .const import (
     ATTR_INCLUDE_SCRIPTS,
     ATTR_SCOPE,
     ATTR_WRITE_FILE,
+    CSV_COLUMNS,
     DEFAULT_NOISE_ATTRIBUTES,
+    FORMAT_CSV,
+    FORMAT_JSON,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,6 +105,7 @@ def build_curated_list(
     exclude_attributes: list[str] | None = None,
     exclude_entities: list[str] | None = None,
     include_attributes: list[str] | None = None,
+    include_all_attributes: bool = True,
 ) -> list[dict[str, Any]]:
     """Walk the entity registry and return a curated list of entities.
 
@@ -113,7 +120,14 @@ def build_curated_list(
     domain_filter = set(domains) if domains else None
     exclude_entity_set = set(exclude_entities or [])
 
-    attr_exclude = set(DEFAULT_NOISE_ATTRIBUTES) | set(exclude_attributes or [])
+    # By default keep every attribute (so an LLM sees the full picture); only
+    # drop the built-in noise list when include_all_attributes is False. The
+    # user's exclude_attributes always applies. An include_attributes allowlist
+    # still takes precedence over both.
+    if include_all_attributes:
+        attr_exclude = set(exclude_attributes or [])
+    else:
+        attr_exclude = set(DEFAULT_NOISE_ATTRIBUTES) | set(exclude_attributes or [])
     attr_include_only = set(include_attributes) if include_attributes else None
 
     curated: list[dict[str, Any]] = []
@@ -368,6 +382,34 @@ def _write_json_file(path: Path, payload: dict[str, Any]) -> None:
         json.dump(payload, handle, indent=2, default=str)
 
 
+def _csv_cell(value: Any) -> str:
+    """Render a curated-entity value for a CSV cell.
+
+    Scalars pass through as-is; dict/list values (notably ``attributes``) are
+    JSON-encoded so the whole structure survives in a single column.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False, default=str)
+    return str(value)
+
+
+def _write_csv_file(path: Path, entities: list[dict[str, Any]]) -> None:
+    """Blocking write of the curated entity list as a flat CSV.
+
+    One row per entity, columns per ``CSV_COLUMNS``. Attributes are JSON-encoded
+    into a single ``attributes`` column so nothing is lost. Automations, scripts
+    and scenes are nested structures and are not part of the CSV — use the JSON
+    format for those. Must be run in the executor.
+    """
+    with open(path, "w", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(CSV_COLUMNS)
+        for entity in entities:
+            writer.writerow([_csv_cell(entity.get(col)) for col in CSV_COLUMNS])
+
+
 async def async_handle_export(hass: HomeAssistant, call: ServiceCall) -> dict:
     """Service entry point: build the list, optionally write it, return it."""
     data = call.data
@@ -382,6 +424,7 @@ async def async_handle_export(hass: HomeAssistant, call: ServiceCall) -> dict:
         exclude_attributes=data.get(ATTR_EXCLUDE_ATTRIBUTES),
         exclude_entities=data.get(ATTR_EXCLUDE_ENTITIES),
         include_attributes=data.get(ATTR_INCLUDE_ATTRIBUTES),
+        include_all_attributes=data.get(ATTR_INCLUDE_ALL_ATTRIBUTES, True),
     )
 
     # Resolve the selected areas once so logic items match the same scope as
@@ -405,10 +448,12 @@ async def async_handle_export(hass: HomeAssistant, call: ServiceCall) -> dict:
     )
 
     scope = data.get(ATTR_SCOPE, "export")
+    file_format = data.get(ATTR_FORMAT, FORMAT_JSON)
     payload: dict[str, Any] = {
         "metadata": {
             "timestamp": datetime.now().isoformat(),
             "scope": scope,
+            "format": file_format,
             "entity_count": len(curated),
             "automation_count": len(automations),
             "script_count": len(scripts),
@@ -422,6 +467,9 @@ async def async_handle_export(hass: HomeAssistant, call: ServiceCall) -> dict:
                 "include_automations": include_automations,
                 "include_scripts": include_scripts,
                 "include_scenes": include_scenes,
+                "include_all_attributes": data.get(
+                    ATTR_INCLUDE_ALL_ATTRIBUTES, True
+                ),
             },
             "description": (
                 "Curated list of actionable HA entities plus existing "
@@ -440,15 +488,26 @@ async def async_handle_export(hass: HomeAssistant, call: ServiceCall) -> dict:
     if data.get(ATTR_WRITE_FILE, True):
         safe_scope = slugify(scope) or "export"
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"ha_entities_{safe_scope}_{stamp}.json"
+        ext = "csv" if file_format == FORMAT_CSV else "json"
+        filename = f"ha_entities_{safe_scope}_{stamp}.{ext}"
         target = Path(hass.config.path(filename))
         try:
-            await hass.async_add_executor_job(_write_json_file, target, payload)
+            if file_format == FORMAT_CSV:
+                # CSV covers the flat entity list only (automations/scripts/
+                # scenes are nested — use JSON for those).
+                await hass.async_add_executor_job(
+                    _write_csv_file, target, curated
+                )
+            else:
+                await hass.async_add_executor_job(
+                    _write_json_file, target, payload
+                )
             file_path = str(target)
             _LOGGER.info(
-                "Entity Data Exporter: wrote %d entities to %s",
+                "Entity Data Exporter: wrote %d entities to %s (%s)",
                 len(curated),
                 file_path,
+                file_format,
             )
         except OSError as err:
             _LOGGER.error(
@@ -462,6 +521,7 @@ async def async_handle_export(hass: HomeAssistant, call: ServiceCall) -> dict:
         "automation_count": len(automations),
         "script_count": len(scripts),
         "scene_count": len(scenes),
+        "format": file_format,
         "file_path": file_path,
         "metadata": payload["metadata"],
         "entities": curated,

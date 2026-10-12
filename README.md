@@ -9,9 +9,11 @@
 [![License](https://img.shields.io/github/license/cobragt2000/data_exporter?color=blue)](LICENSE)
 
 A Home Assistant custom integration that produces a **curated** list of your
-entities — filtered by area and domain, with all the junk (diagnostic/config
-entities, hidden and disabled entities, RSSI/battery/voltage noise) removed —
-so you can hand a clean, actionable inventory to an LLM for automation design.
+entities — filtered by area and domain, with the junk entities (diagnostic/config,
+hidden, and disabled) dropped — so you can hand a clean, actionable inventory to
+an LLM for automation design. By default each entity keeps **all** of its
+attributes so the LLM sees the full picture; you can switch on noise-stripping
+(or an allowlist) when you want a leaner payload.
 
 It ships with a **custom Lovelace card** for point-and-click exports and a
 **service/action** you can call from Developer Tools, scripts, or automations.
@@ -30,13 +32,22 @@ registry, so this integration leans on that instead of a brittle blocklist:
 | Diagnostic / config entities (RSSI, battery %, uptime, firmware, etc.) | `entity_category` is `diagnostic`/`config` → dropped by default |
 | Hidden entities | `hidden_by` is set → dropped by default |
 | Disabled entities | `disabled_by` is set → dropped by default |
-| Noisy attributes (rssi, voltage, linkquality, attribution, …) | stripped from each entity's attribute payload |
 
-On top of that automatic base you can still pass **manual overrides**
-(`exclude_entities`, `exclude_attributes`) and an allowlist
-(`include_attributes`) for the odd case the registry doesn't catch. Each of
-the auto filters can be turned off per-call (`include_diagnostic`,
-`include_hidden`, `include_disabled`).
+**Attributes are kept in full by default** (`include_all_attributes: true`) so
+the LLM sees everything each entity exposes — supported features, color modes,
+and the like. Turn `include_all_attributes` **off** to strip a built-in noise
+list (rssi, voltage, linkquality, battery, supported_features, attribution, …)
+from each entity's attribute payload.
+
+On top of that you can still pass **manual overrides** (`exclude_entities`,
+`exclude_attributes`) and an allowlist (`include_attributes`, which overrides
+the above and keeps only the listed attributes). Each entity auto-filter can be
+turned off per-call (`include_diagnostic`, `include_hidden`, `include_disabled`).
+
+> **Battery readings:** "battery" is a `device_class` on the `sensor` domain,
+> not a domain of its own. Battery sensors are usually tagged *diagnostic*, so
+> to include them pick the `sensor` domain (or leave domains empty) and turn on
+> `include_diagnostic`.
 
 ## Automations, scripts & scenes in the export
 
@@ -95,9 +106,11 @@ type: custom:data-exporter-card
 title: Entity Data Exporter   # optional
 ```
 
-Pick areas and domains (leave empty for "all"), toggle whether to include
-diagnostic/hidden/disabled entities, and hit **Run Export**. The card reports
-the entity count and the file path.
+Pick areas and domains (both multi-selects list **every area and domain in your
+Home Assistant**; leave empty for "all"), toggle whether to include
+diagnostic/hidden/disabled entities and automations/scripts/scenes, choose the
+**file format** (JSON or CSV), and hit **Run Export**. The card reports the
+entity count and the file path.
 
 ### Via the action
 
@@ -174,24 +187,33 @@ The response and the written file both look like:
 ```
 
 Files are written to the config directory as
-`ha_entities_<scope>_<timestamp>.json`.
+`ha_entities_<scope>_<timestamp>.json` (or `.csv` when `format: csv`).
+
+With `format: csv`, the written file is the flat **entity list** only — one row
+per entity with columns `entity_id, name, domain, area, device, device_class,
+state, attributes` (the attributes dict is JSON-encoded into that single
+column). Automations, scripts, and scenes are nested structures and stay in the
+JSON export; the inline service response is always the full structured JSON
+regardless of `format`.
 
 ### Service parameters
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `areas` | list | all | Area ids or friendly names to include |
-| `domains` | list | all | Domains (`light`, `switch`, …) to include |
+| `domains` | list | all | Domains to include — **any** HA domain (`light`, `switch`, `climate`, `sensor`, …). The card lists every domain in your HA; the action's dropdown lists the standard domains and accepts custom values too |
 | `include_diagnostic` | bool | `false` | Include diagnostic/config entities |
 | `include_hidden` | bool | `false` | Include hidden entities |
 | `include_disabled` | bool | `false` | Include disabled entities |
 | `include_automations` | bool | `true` | Include full automation configs + what they reference (area-filtered) |
 | `include_scripts` | bool | `true` | Include full script configs + what they reference (area-filtered) |
 | `include_scenes` | bool | `true` | Include scene configs + what they reference (area-filtered) |
-| `exclude_attributes` | list | — | Extra attribute names to strip |
-| `include_attributes` | list | — | Allowlist: keep only these attributes |
+| `include_all_attributes` | bool | `true` | Keep every attribute per entity; set `false` to strip the built-in noise list |
+| `exclude_attributes` | list | — | Attribute names to strip (applied on top of the above) |
+| `include_attributes` | list | — | Allowlist: keep only these attributes (overrides the two above) |
 | `exclude_entities` | list | — | Specific entity_ids to drop |
-| `write_file` | bool | `true` | Write the JSON file to config |
+| `write_file` | bool | `true` | Write the export file to config |
+| `format` | string | `json` | Written file format: `json` (full export) or `csv` (flat entity list) |
 | `scope` | string | `export` | Label used in filename + metadata |
 
 ## Requirements

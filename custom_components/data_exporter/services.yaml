@@ -17,7 +17,8 @@ export_data:
       name: Domains
       description: >-
         Entity domains to include (e.g. light, switch, climate). Leave empty
-        for all domains.
+        for all domains. The list below covers the standard Home Assistant
+        domains; custom_value is on, so you can also type any domain not listed.
       required: false
       example: '["light", "switch", "climate"]'
       selector:
@@ -25,20 +26,58 @@ export_data:
           multiple: true
           custom_value: true
           options:
-            - light
-            - switch
+            - air_quality
+            - alarm_control_panel
+            - assist_satellite
+            - automation
+            - binary_sensor
+            - button
+            - calendar
+            - camera
             - climate
+            - conversation
+            - counter
             - cover
+            - date
+            - datetime
+            - device_tracker
+            - event
             - fan
+            - group
+            - humidifier
+            - image
+            - input_boolean
+            - input_button
+            - input_datetime
+            - input_number
+            - input_select
+            - input_text
+            - lawn_mower
+            - light
             - lock
             - media_player
-            - vacuum
-            - sensor
-            - binary_sensor
-            - humidifier
-            - water_heater
+            - notify
             - number
+            - person
+            - remote
+            - scene
+            - schedule
+            - script
             - select
+            - sensor
+            - siren
+            - sun
+            - switch
+            - text
+            - time
+            - timer
+            - todo
+            - update
+            - vacuum
+            - valve
+            - water_heater
+            - weather
+            - zone
     include_diagnostic:
       name: Include diagnostic & config entities
       description: Include entities HA tags as diagnostic or config.
@@ -88,11 +127,22 @@ export_data:
       default: true
       selector:
         boolean:
+    include_all_attributes:
+      name: Include all attributes
+      description: >-
+        Export every attribute each entity exposes (default) so a downstream LLM
+        sees the full picture. Turn this off to strip the built-in noise list
+        (rssi, battery, voltage, linkquality, supported_features, color modes,
+        etc.). Ignored when "Only these attributes" is set.
+      required: false
+      default: true
+      selector:
+        boolean:
     exclude_attributes:
       name: Exclude attributes
       description: >-
-        Extra attribute names to strip from each entity, on top of the
-        built-in noise list (rssi, battery, voltage, etc.).
+        Attribute names to strip from each entity. Applies on top of whatever
+        "Include all attributes" leaves in.
       required: false
       example: '["custom_noise_attr"]'
       selector:
@@ -116,12 +166,27 @@ export_data:
         entity:
           multiple: true
     write_file:
-      name: Write JSON file
-      description: Write a timestamped JSON file to the config directory.
+      name: Write file
+      description: Write a timestamped export file to the config directory.
       required: false
       default: true
       selector:
         boolean:
+    format:
+      name: File format
+      description: >-
+        Format for the written file. "json" writes the full export (entities +
+        automations + scripts + scenes). "csv" writes just the curated entity
+        list as a flat table (one row per entity; attributes are JSON-encoded in
+        a single column). Automations/scripts/scenes are not included in CSV.
+      required: false
+      default: json
+      example: csv
+      selector:
+        select:
+          options:
+            - json
+            - csv
     scope:
       name: Scope label
       description: A label stored in the file metadata and used in the filename.

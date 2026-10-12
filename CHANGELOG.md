@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.4.4] - 2026-10-12
+
+### Changed (card UI)
+- Dashboard card layout polish: checkbox toggles are now in two aligned columns
+  (top-aligned); all toggle labels are title-cased ("Include Diag/Config",
+  "Include Hidden", … "Write File"); "File format" and "Scope label" sit side by
+  side on one row; the file-format dropdown options are shortened to
+  "JSON (full export)" / "CSV (entity list)". Card version bumped to 2.4.4 so
+  browsers re-fetch the updated card.
+- README dashboard-card screenshot (`docs/card.png`) refreshed to the new layout.
+
+## [2.4.3] - 2026-10-12
+
+### Changed (behavior)
+- **All attributes are now exported by default.** Each entity keeps every
+  attribute it exposes (supported features, color modes, rssi, battery, etc.) so
+  a downstream LLM sees the full picture. The old noise-stripping is now opt-in
+  via the new `include_all_attributes` toggle (default `true`; set `false` to
+  strip the built-in noise list). `exclude_attributes` and the
+  `include_attributes` allowlist still apply as before. Added to the card too.
+
+### Added
+- **CSV export.** New `format` option (`json` default, or `csv`) on the service
+  and the card. `csv` writes the curated entity list as a flat table — one row
+  per entity with columns `entity_id, name, domain, area, device, device_class,
+  state, attributes` (attributes JSON-encoded in a single column). The written
+  file is named `ha_entities_<scope>_<timestamp>.csv`. JSON remains the full
+  export (entities + automations + scripts + scenes); CSV is the entity list
+  only. `format` is also reported in the metadata and service response.
+
+### Changed
+- HACS now installs from the attached release asset: `hacs.json` sets
+  `zip_release` with `filename: data_exporter.zip`. HACS downloads
+  `data_exporter.zip` on install/update, so the GitHub downloads count (and the
+  README downloads badge) tracks installs. The release asset stays
+  integration-files-at-root (built by `release.yml`).
+- Card: the "Write JSON file" toggle is now "Write file", with a File-format
+  selector beside the scope. Card version bumped to 2.4.3 (cache-bust).
+- The service's `domains` selector now lists the full set of standard Home
+  Assistant domains (was a 14-item subset); `custom_value` stays on for anything
+  not listed. The card already lists every domain present in your HA.
+
 ## [2.4.2] - 2026-10-12
 
 ### Changed

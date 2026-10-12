@@ -67,14 +67,19 @@ class DataExporterCard extends HTMLElement {
         }
         select[multiple] option { padding: 3px 6px; }
         .hint { color: var(--secondary-text-color); font-size: 0.78em; margin-top: 4px; }
-        .toggles { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; }
-        .toggle { display: flex; align-items: center; gap: 6px; color: var(--primary-text-color); font-size: 0.9em; }
-        .scope-row { margin-top: 14px; display: flex; flex-direction: column; }
-        .scope-row input[type=text] {
+        .toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin-top: 14px; }
+        @media (max-width: 480px) { .toggles { grid-template-columns: 1fr; } }
+        .toggle { display: flex; align-items: flex-start; gap: 6px; color: var(--primary-text-color); font-size: 0.9em; line-height: 1.3; }
+        .toggle input { margin: 1px 0 0; flex: 0 0 auto; }
+        .io-row { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .io-group { display: flex; flex-direction: column; }
+        .io-row select, .io-row input[type=text] {
+          width: 100%; box-sizing: border-box;
           padding: 8px; border-radius: 6px;
           border: 1px solid var(--divider-color, #c7c7c7);
           background: var(--card-background-color, var(--ha-card-background));
           color: var(--primary-text-color);
+          font-size: 0.95em;
         }
         button.run {
           margin-top: 18px; width: 100%; padding: 12px;
@@ -104,17 +109,27 @@ class DataExporterCard extends HTMLElement {
           </div>
         </div>
         <div class="toggles">
-          <label class="toggle"><input type="checkbox" id="diag"> Include diagnostic/config</label>
-          <label class="toggle"><input type="checkbox" id="hidden"> Include hidden</label>
-          <label class="toggle"><input type="checkbox" id="disabled"> Include disabled</label>
-          <label class="toggle"><input type="checkbox" id="automations" checked> Include automations</label>
-          <label class="toggle"><input type="checkbox" id="scripts" checked> Include scripts</label>
-          <label class="toggle"><input type="checkbox" id="scenes" checked> Include scenes</label>
-          <label class="toggle"><input type="checkbox" id="writefile" checked> Write JSON file</label>
+          <label class="toggle"><input type="checkbox" id="diag"> Include Diag/Config</label>
+          <label class="toggle"><input type="checkbox" id="hidden"> Include Hidden</label>
+          <label class="toggle"><input type="checkbox" id="disabled"> Include Disabled</label>
+          <label class="toggle"><input type="checkbox" id="automations" checked> Include Automations</label>
+          <label class="toggle"><input type="checkbox" id="scripts" checked> Include Scripts</label>
+          <label class="toggle"><input type="checkbox" id="scenes" checked> Include Scenes</label>
+          <label class="toggle"><input type="checkbox" id="allattrs" checked> Include All Attributes</label>
+          <label class="toggle"><input type="checkbox" id="writefile" checked> Write File</label>
         </div>
-        <div class="scope-row">
-          <label for="scope">Scope label</label>
-          <input type="text" id="scope" value="export" />
+        <div class="io-row">
+          <div class="io-group">
+            <label for="format">File format</label>
+            <select id="format">
+              <option value="json" selected>JSON (full export)</option>
+              <option value="csv">CSV (entity list)</option>
+            </select>
+          </div>
+          <div class="io-group scope">
+            <label for="scope">Scope label</label>
+            <input type="text" id="scope" value="export" />
+          </div>
         </div>
         <button class="run" id="run">Run Export</button>
         <div class="status" id="status" style="display:none;"></div>
@@ -177,7 +192,9 @@ class DataExporterCard extends HTMLElement {
       include_automations: this.shadowRoot.getElementById("automations").checked,
       include_scripts: this.shadowRoot.getElementById("scripts").checked,
       include_scenes: this.shadowRoot.getElementById("scenes").checked,
+      include_all_attributes: this.shadowRoot.getElementById("allattrs").checked,
       write_file: this.shadowRoot.getElementById("writefile").checked,
+      format: this.shadowRoot.getElementById("format").value || "json",
       scope: this.shadowRoot.getElementById("scope").value || "export",
     };
     // Drop empty lists so the service treats them as "all".

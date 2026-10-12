@@ -10,7 +10,7 @@ SERVICE_EXPORT_DATA = "export_data"
 
 # Bump when the bundled card JS changes, so the resource URL's ?v= query
 # busts the browser cache. Keep in sync with manifest.json "version".
-CARD_VERSION = "2.4.0"
+CARD_VERSION = "2.4.4"
 
 # Service call parameter names.
 ATTR_AREAS = "areas"
@@ -24,8 +24,27 @@ ATTR_INCLUDE_SCENES = "include_scenes"
 ATTR_EXCLUDE_ATTRIBUTES = "exclude_attributes"
 ATTR_EXCLUDE_ENTITIES = "exclude_entities"
 ATTR_INCLUDE_ATTRIBUTES = "include_attributes"
+ATTR_INCLUDE_ALL_ATTRIBUTES = "include_all_attributes"
 ATTR_WRITE_FILE = "write_file"
 ATTR_SCOPE = "scope"
+ATTR_FORMAT = "format"
+
+# Written-file formats.
+FORMAT_JSON = "json"
+FORMAT_CSV = "csv"
+FILE_FORMATS = [FORMAT_JSON, FORMAT_CSV]
+
+# Column order for the CSV (flat) entity export.
+CSV_COLUMNS = [
+    "entity_id",
+    "name",
+    "domain",
+    "area",
+    "device",
+    "device_class",
+    "state",
+    "attributes",
+]
 
 # Attributes that are almost always noise for LLM-driven automation design.
 # These are stripped from an entity's attribute dict in addition to anything
@@ -73,7 +92,14 @@ SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_INCLUDE_ATTRIBUTES): vol.All(
             cv.ensure_list, [cv.string]
         ),
+        # Default True: export every attribute an entity exposes so a downstream
+        # LLM sees the full picture. Set False to strip the built-in noise list
+        # (rssi, battery, voltage, supported_features, …). Ignored when
+        # include_attributes (allowlist) is set.
+        vol.Optional(ATTR_INCLUDE_ALL_ATTRIBUTES, default=True): cv.boolean,
         vol.Optional(ATTR_WRITE_FILE, default=True): cv.boolean,
         vol.Optional(ATTR_SCOPE, default="export"): cv.string,
+        # Written-file format: json (full export) or csv (flat entity list).
+        vol.Optional(ATTR_FORMAT, default=FORMAT_JSON): vol.In(FILE_FORMATS),
     }
 )
